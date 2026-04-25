@@ -3,6 +3,8 @@ import {
   StylebotCommands,
   ReadabilitySettings,
   StyleMap,
+  StylebotAiStyleContext,
+  StylebotAiChatHistoryEntry,
 } from '@stylebot/types';
 
 export type SetStyle = {
@@ -108,6 +110,13 @@ export type RunGoogleDriveSync = {
   name: 'RunGoogleDriveSync';
 };
 
+export type GenerateCssWithOpenAi = {
+  name: 'GenerateCssWithOpenAi';
+  prompt: string;
+  styleContext: StylebotAiStyleContext;
+  chatHistory: Array<StylebotAiChatHistoryEntry>;
+};
+
 type BackgroundPageMessage =
   | SetStyle
   | EnableStyle
@@ -128,6 +137,7 @@ type BackgroundPageMessage =
   | GetReadabilitySettings
   | SetReadabilitySettings
   | GetImportCss
-  | RunGoogleDriveSync;
+  | RunGoogleDriveSync
+  | GenerateCssWithOpenAi;
 
 export default BackgroundPageMessage;

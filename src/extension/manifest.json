@@ -4,7 +4,7 @@
   "version": "3.1.4",
   "author": "Ankit Ahuja",
   "description": "__MSG_extension_description__",
-  "default_locale": "en",
+  "default_locale": "en_US",
   "background": {
     "service_worker": "background/index.js",
     "type": "module"
@@ -52,7 +52,8 @@
   "host_permissions": [
     "https://drive.google.com/*",
     "https://www.googleapis.com/*",
-    "https://fonts.googleapis.com/*"
+    "https://fonts.googleapis.com/*",
+    "https://api.openai.com/*"
   ],
   "web_accessible_resources": [
     {

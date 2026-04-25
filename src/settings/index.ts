@@ -30,6 +30,8 @@ export const defaultOptions: StylebotOptions = {
     dockLocation: 'right',
   },
   colorPalette: 'basic',
+  openAiApiKey: '',
+  openAiModel: 'gpt-5.4-mini',
 };
 
 export const defaultCommands: StylebotCommands = {
@@ -44,6 +46,7 @@ export const defaultEditorCommands: StylebotEditorCommands = {
   basic: 'b',
   magic: 'm',
   code: 'c',
+  chat: 'a',
   help: '?',
   hide: 'h',
   resize: 's',

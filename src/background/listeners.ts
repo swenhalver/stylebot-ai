@@ -21,9 +21,11 @@ import {
   SetReadabilitySettings,
   GetImportCss,
   RunGoogleDriveSync,
+  GenerateCssWithOpenAi,
 } from './messages';
 
 import { get as getOption } from './options';
+import { sendTabMessage } from './send-tab-message';
 
 import {
   TabUpdated,
@@ -60,7 +62,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, _, tab) => {
     };
 
     if (!tab.url?.includes('chrome-extension://')) {
-      chrome.tabs.sendMessage(tabId, message);
+      sendTabMessage(tabId, message);
     }
   }
 });
@@ -150,6 +152,10 @@ chrome.runtime.onMessage.addListener(
 
       case 'RunGoogleDriveSync':
         RunGoogleDriveSync(message, sendResponse);
+        break;
+
+      case 'GenerateCssWithOpenAi':
+        GenerateCssWithOpenAi(message, sendResponse);
         break;
     }
 

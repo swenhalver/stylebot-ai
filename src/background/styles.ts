@@ -11,6 +11,7 @@ import {
 } from '@stylebot/types';
 
 import BackgroundPageUtils from './utils';
+import { sendTabMessage } from './send-tab-message';
 
 export const updateIcon = (
   tab: chrome.tabs.Tab,
@@ -48,7 +49,7 @@ export const applyStylesToAllTabs = async (): Promise<void> => {
           styles,
         };
 
-        chrome.tabs.sendMessage(tab.id, message);
+        sendTabMessage(tab.id, message);
 
         if (tab.active) {
           updateIcon(tab, styles, defaultStyle);

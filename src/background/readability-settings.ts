@@ -1,6 +1,8 @@
 import { defaultReadabilitySettings } from '@stylebot/settings';
 import { ReadabilitySettings, UpdateReader } from '@stylebot/types';
 
+import { sendTabMessage } from './send-tab-message';
+
 export const get = (): Promise<ReadabilitySettings> => {
   return new Promise(resolve => {
     chrome.storage.local.get('readability-settings', items => {
@@ -28,7 +30,7 @@ export const set = (value: ReadabilitySettings): Promise<void> => {
             value,
           };
 
-          chrome.tabs.sendMessage(tab.id, message);
+          sendTabMessage(tab.id, message);
         }
       });
     });

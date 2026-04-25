@@ -2,6 +2,7 @@ import { t } from '@stylebot/i18n';
 import { OpenStylebotFromContextMenu } from '@stylebot/types';
 
 import BackgroundPageUtils from './utils';
+import { sendTabMessage } from './send-tab-message';
 
 const CONTEXT_MENU_ID = 'stylebot-contextmenu';
 const VIEW_OPTIONS_MENU_ITEM_ID = 'view-options';
@@ -66,7 +67,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
           name: 'OpenStylebotFromContextMenu',
         };
 
-        chrome.tabs.sendMessage(tab.id, message);
+        sendTabMessage(tab.id, message);
       }
 
       break;

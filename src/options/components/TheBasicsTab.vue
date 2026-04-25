@@ -9,6 +9,10 @@
     </b-row>
 
     <b-row no-gutters class="mt-5">
+      <the-open-ai-settings />
+    </b-row>
+
+    <b-row no-gutters class="mt-5">
       <the-keyboard-shortcuts />
     </b-row>
   </div>
@@ -20,6 +24,7 @@ import Vue from 'vue';
 import TheFonts from './basics/TheFonts.vue';
 import TheContextMenu from './basics/TheContextMenu.vue';
 import TheKeyboardShortcuts from './basics/TheKeyboardShortcuts.vue';
+import TheOpenAiSettings from './basics/TheOpenAiSettings.vue';
 
 export default Vue.extend({
   name: 'TheBasicsTab',
@@ -28,6 +33,7 @@ export default Vue.extend({
     TheFonts,
     TheContextMenu,
     TheKeyboardShortcuts,
+    TheOpenAiSettings,
   },
 
   computed: {

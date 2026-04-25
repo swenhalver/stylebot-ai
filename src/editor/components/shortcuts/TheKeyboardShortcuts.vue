@@ -65,7 +65,7 @@ export default Vue.extend({
     },
 
     toggleInspect(): void {
-      if (this.mode === 'basic') {
+      if (this.mode === 'basic' || this.mode === 'chat') {
         this.$store.commit('setInspecting', !this.inspecting);
       }
     },
@@ -176,6 +176,14 @@ export default Vue.extend({
         event.stopPropagation();
 
         this.$store.dispatch('setMode', 'magic');
+      }
+
+      // Switch to chat editor
+      if (event.key === this.editorCommands.chat) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        this.$store.dispatch('setMode', 'chat');
       }
 
       // Show shortcut help

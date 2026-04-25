@@ -1,7 +1,7 @@
 // format: yyyy-MM-dd'T'HH:mm:ss.SSSxxx
 export type Timestamp = string;
 
-export type StylebotEditingMode = 'basic' | 'magic' | 'code';
+export type StylebotEditingMode = 'basic' | 'magic' | 'code' | 'chat';
 
 export type StylebotBasicModeSections = {
   text: boolean;
@@ -26,6 +26,49 @@ export type StylebotOptions = {
   mode: StylebotEditingMode;
   basicModeSections: StylebotBasicModeSections;
   colorPalette: StylebotColorPalette;
+  openAiApiKey: string;
+  openAiModel: string;
+};
+
+export type StylebotAiStyleContext = {
+  page: {
+    url: string;
+    title: string;
+    viewport: string;
+    stylebotUrl: string;
+  };
+  existingCss: string;
+  activeElement?: {
+    selector: string;
+    html: string;
+    text: string;
+    rect: string;
+    computedStyle: string;
+  };
+  styleSheets: {
+    readable: Array<{
+      href: string;
+      rules: string;
+      truncated: boolean;
+    }>;
+    blocked: Array<{
+      href: string;
+      reason: string;
+    }>;
+  };
+  computedStyles: Array<{
+    selector: string;
+    count: number;
+    sample: string;
+    computedStyle: string;
+  }>;
+};
+
+export type StylebotAiChatHistoryEntry = {
+  role: 'user' | 'assistant';
+  content: string;
+  css?: string;
+  createdAt: Timestamp;
 };
 
 export type Style = {
@@ -86,6 +129,7 @@ export type StylebotEditorCommandName =
   | 'basic'
   | 'magic'
   | 'code'
+  | 'chat'
   | 'help'
   | 'hide'
   | 'dockLeft'

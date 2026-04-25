@@ -17,6 +17,10 @@ import {
   SetReadabilitySettings,
   ReadabilitySettings,
   OpenDonatePage,
+  GenerateCssWithOpenAi,
+  GenerateCssWithOpenAiResponse,
+  StylebotAiStyleContext,
+  StylebotAiChatHistoryEntry,
 } from '@stylebot/types';
 
 export const getAllOptions = async (): Promise<StylebotOptions> => {
@@ -58,6 +62,11 @@ export const getStylesForPage = async (
     chrome.runtime.sendMessage(
       message,
       (response: GetStylesForPageResponse) => {
+        if (chrome.runtime.lastError || !response) {
+          resolve({ styles: [] });
+          return;
+        }
+
         resolve(response);
       }
     );
@@ -159,4 +168,26 @@ export const setReadabilitySettings = (value: ReadabilitySettings): void => {
   };
 
   chrome.runtime.sendMessage(message);
+};
+
+export const generateCssWithOpenAi = async (
+  prompt: string,
+  styleContext: StylebotAiStyleContext,
+  chatHistory: Array<StylebotAiChatHistoryEntry>
+): Promise<GenerateCssWithOpenAiResponse> => {
+  const message: GenerateCssWithOpenAi = {
+    name: 'GenerateCssWithOpenAi',
+    prompt,
+    styleContext,
+    chatHistory,
+  };
+
+  return new Promise(resolve => {
+    chrome.runtime.sendMessage(
+      message,
+      (response: GenerateCssWithOpenAiResponse) => {
+        resolve(response);
+      }
+    );
+  });
 };

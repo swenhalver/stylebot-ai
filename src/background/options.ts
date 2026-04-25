@@ -5,7 +5,10 @@ export const getAll = (): Promise<StylebotOptions> =>
   new Promise(resolve => {
     chrome.storage.local.get('options', items => {
       if (items['options']) {
-        resolve(items['options']);
+        resolve({
+          ...defaultOptions,
+          ...items['options'],
+        });
       } else {
         resolve(defaultOptions);
       }

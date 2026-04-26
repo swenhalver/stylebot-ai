@@ -29,6 +29,7 @@ export type CssSelectorMetadata = {
 export type State = {
   url: string;
   css: string;
+  js: string;
   enabled: boolean;
   readability: boolean;
 
@@ -51,6 +52,7 @@ export type State = {
 export default new Vuex.Store<State>({
   state: {
     css: '',
+    js: '',
     enabled: true,
     readability: false,
     url: document.domain,

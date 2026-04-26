@@ -21,6 +21,11 @@ export default Vue.extend({
       type: String,
       required: true,
     },
+    language: {
+      type: String,
+      required: false,
+      default: 'css',
+    },
   },
 
   created() {
@@ -54,6 +59,7 @@ export default Vue.extend({
     handleIframeLoaded(): void {
       const message: ParentUpdateCssMessage = {
         css: this.css,
+        language: this.language as 'css' | 'javascript',
         type: 'stylebotCssUpdate',
       };
 

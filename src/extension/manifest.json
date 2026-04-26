@@ -46,10 +46,12 @@
     "tabs",
     "storage",
     "identity",
+    "scripting",
     "contextMenus",
     "unlimitedStorage"
   ],
   "host_permissions": [
+    "<all_urls>",
     "https://drive.google.com/*",
     "https://www.googleapis.com/*",
     "https://fonts.googleapis.com/*",

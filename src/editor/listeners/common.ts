@@ -10,6 +10,7 @@ import {
   enableStyle as sendEnableStyleMessage,
   disableStyle as sendDisableStyleMessage,
 } from '../utils/chrome';
+import { injectJSIntoDocument } from '../../inject-js';
 
 export const toggleStylebot = (store: Store<State>, inspect = true): void => {
   if (store.state.visible) {
@@ -70,8 +71,10 @@ export const applyStyles = (
         appendImportantToDeclarations(style.css),
         style.url
       );
+      injectJSIntoDocument(style.js || '', style.url);
     } else {
       injectCSSIntoDocument('', style.url);
+      injectJSIntoDocument('', style.url);
     }
   });
 

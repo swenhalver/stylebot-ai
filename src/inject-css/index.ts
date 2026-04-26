@@ -4,6 +4,7 @@
  */
 import { injectCSSIntoDocument } from '@stylebot/css';
 import { apply as applyReadability } from '@stylebot/readability';
+import { injectJSIntoDocument } from '../inject-js';
 
 import {
   GetStylesForPage,
@@ -28,6 +29,7 @@ const injectCss = (
         styles.forEach(style => {
           if (style.enabled) {
             injectCSSIntoDocument(style.css, style.url);
+            injectJSIntoDocument(style.js || '', style.url);
           }
         });
 

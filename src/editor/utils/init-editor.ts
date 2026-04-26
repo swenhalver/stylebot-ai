@@ -47,8 +47,52 @@ Vue.mixin({
   },
 });
 
+const ts = (): string => new Date().toISOString();
+
+Vue.config.errorHandler = (err, vm, info): void => {
+  const componentName =
+    (vm && (vm.$options.name || vm.$options._componentTag)) || 'unknown';
+  console.error(
+    `[${ts()}] Stylebot editor Vue error in <${componentName}> (${info}):`,
+    err
+  );
+};
+
+Vue.config.warnHandler = (msg, vm): void => {
+  const componentName =
+    (vm && (vm.$options.name || vm.$options._componentTag)) || 'unknown';
+  console.warn(
+    `[${ts()}] Stylebot editor Vue warn in <${componentName}>: ${msg}`
+  );
+};
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', event => {
+    console.error(
+      `[${ts()}] Stylebot editor window error at ${event.filename}:${event.lineno}:${event.colno}:`,
+      event.error || event.message
+    );
+  });
+
+  window.addEventListener('unhandledrejection', event => {
+    console.error(
+      `[${ts()}] Stylebot editor unhandled rejection:`,
+      event.reason
+    );
+  });
+}
+
 const injectCss = (shadowRoot: ShadowRoot): void => {
-  const url = chrome.runtime.getURL('editor/index.css');
+  let url: string;
+  try {
+    url = chrome.runtime.getURL('editor/index.css');
+  } catch (e) {
+    console.error(
+      `[${ts()}] Stylebot failed to resolve editor CSS URL (extension context likely invalidated):`,
+      e
+    );
+    return;
+  }
 
   fetch(url, { method: 'GET' })
     .then(response => response.text())
@@ -57,6 +101,9 @@ const injectCss = (shadowRoot: ShadowRoot): void => {
       styleEl.setAttribute('id', 'stylebot-editor-css');
       styleEl.innerHTML = css;
       shadowRoot.appendChild(styleEl);
+    })
+    .catch(e => {
+      console.error(`[${ts()}] Stylebot failed to inject editor CSS:`, e);
     });
 };
 

@@ -43,6 +43,7 @@ import {
 
 import { initListeners } from '../listeners';
 import { initEditor } from '../utils/init-editor';
+import { injectJSIntoDocument } from '../../inject-js';
 
 export default {
   async initialize(
@@ -67,6 +68,9 @@ export default {
     if (!options.fonts) {
       options.fonts = defaultOptions.fonts;
     }
+    if (options.mode === 'basic') {
+      options.mode = 'code';
+    }
 
     commit('setOptions', options);
 
@@ -83,10 +87,11 @@ export default {
     { commit }: { commit: Commit },
     defaultStyle: Style
   ): void {
-    const { url, enabled, css, readability } = defaultStyle;
+    const { url, enabled, css, js = '', readability } = defaultStyle;
 
     commit('setUrl', url);
     commit('setCss', css);
+    commit('setJs', js);
     commit('setEnabled', enabled);
     commit('setReadability', readability);
 
@@ -139,6 +144,14 @@ export default {
     commit('setOptions', { ...state.options, colorPalette });
   },
 
+  setOpenAiModel(
+    { state, commit }: { state: State; commit: Commit },
+    openAiModel: string
+  ): void {
+    setOption('openAiModel', openAiModel);
+    commit('setOptions', { ...state.options, openAiModel });
+  },
+
   setBasicModeSections(
     { state, commit }: { state: State; commit: Commit },
     basicModeSections: StylebotBasicModeSections
@@ -160,10 +173,19 @@ export default {
 
       // when saving, cleanup any empty rules
       const cleanCss = removeEmptyRules(css);
-      setStyle(state.url, cleanCss, state.readability);
+      setStyle(state.url, cleanCss, state.js, state.readability);
     } catch (e) {
       //
     }
+  },
+
+  applyJs(
+    { commit, state }: { commit: Commit; state: State },
+    { js }: { js: string }
+  ): void {
+    injectJSIntoDocument(js, state.url);
+    commit('setJs', js);
+    setStyle(state.url, removeEmptyRules(state.css), js, state.readability);
   },
 
   applyDeclaration(

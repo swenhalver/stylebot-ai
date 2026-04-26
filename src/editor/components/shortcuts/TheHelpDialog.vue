@@ -80,11 +80,6 @@
               </b-tr>
 
               <b-tr>
-                <b-td>{{ t('set_basic_mode') }}</b-td>
-                <b-td class="stylebot-key">{{ editorCommands.basic }}</b-td>
-              </b-tr>
-
-              <b-tr>
                 <b-td>{{ t('set_magic_mode') }}</b-td>
                 <b-td class="stylebot-key">{{ editorCommands.magic }}</b-td>
               </b-tr>

@@ -3,6 +3,7 @@ import { StylebotAiStyleContext } from '@stylebot/types';
 const MAX_STYLESHEET_RULES = 300;
 const MAX_STYLESHEET_CHARS = 30000;
 const MAX_EXISTING_CSS_CHARS = 12000;
+const MAX_EXISTING_JS_CHARS = 12000;
 const MAX_HTML_CHARS = 2500;
 const MAX_TEXT_CHARS = 1000;
 
@@ -58,6 +59,7 @@ const SAMPLE_SELECTORS = [
 
 type StyleContextOptions = {
   existingCss: string;
+  existingJs: string;
   stylebotUrl: string;
   activeSelector: string;
 };
@@ -179,6 +181,7 @@ const collectActiveElement = (
 
 export const collectStyleContext = ({
   existingCss,
+  existingJs,
   stylebotUrl,
   activeSelector,
 }: StyleContextOptions): StylebotAiStyleContext => {
@@ -190,6 +193,7 @@ export const collectStyleContext = ({
       stylebotUrl,
     },
     existingCss: truncate(existingCss, MAX_EXISTING_CSS_CHARS),
+    existingJs: truncate(existingJs, MAX_EXISTING_JS_CHARS),
     activeElement: collectActiveElement(activeSelector),
     styleSheets: collectStyleSheets(),
     computedStyles: collectComputedStyles(),

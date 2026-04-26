@@ -42,9 +42,16 @@ export const getIsStylebotOpen = (
       name: 'GetIsStylebotOpen',
     };
 
-    chrome.tabs.sendMessage(tab.id, message, (response: boolean) =>
-      callback(response)
-    );
+    chrome.tabs.sendMessage(tab.id, message, (response: boolean) => {
+      if (chrome.runtime.lastError) {
+        console.debug(
+          `[${new Date().toISOString()}] Stylebot popup: no content script on tab ${tab.id} (${tab.url || 'unknown url'}): ${chrome.runtime.lastError.message}`
+        );
+        callback(false);
+        return;
+      }
+      callback(response);
+    });
   }
 };
 
@@ -54,7 +61,13 @@ export const toggleStylebot = (tab: chrome.tabs.Tab): void => {
       name: 'ToggleStylebot',
     };
 
-    chrome.tabs.sendMessage(tab.id, message);
+    chrome.tabs.sendMessage(tab.id, message, () => {
+      if (chrome.runtime.lastError) {
+        console.debug(
+          `[${new Date().toISOString()}] Stylebot popup: toggle failed, no content script on tab ${tab.id} (${tab.url || 'unknown url'}): ${chrome.runtime.lastError.message}`
+        );
+      }
+    });
     window.close();
   }
 };

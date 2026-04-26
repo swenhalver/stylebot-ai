@@ -66,6 +66,7 @@ describe('actions', () => {
       expect(chromeUtils.setStyle).toBeCalledWith(
         mockState.url,
         css,
+        mockState.js,
         mockState.readability
       );
     });

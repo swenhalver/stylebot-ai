@@ -90,11 +90,16 @@ class MonacEditorIframe {
     window.parent.postMessage(message, '*');
   }
 
-  handleStylebotCssUpdate(css: string, selector?: string): void {
+  handleStylebotCssUpdate(
+    css: string,
+    selector?: string,
+    language: 'css' | 'javascript' = 'css'
+  ): void {
     this.editor.setValue(css);
+    window.monaco.editor.setModelLanguage(this.editor.getModel(), language);
     this.editor.focus();
 
-    if (selector) {
+    if (selector && language === 'css') {
       const regex = `^${selector}\\s\\{\\n\\s*(?!\\}).*$`;
       const match = this.editor.getModel().findNextMatch(
         regex,
@@ -126,7 +131,11 @@ class MonacEditorIframe {
       'message',
       (message: { data: ParentUpdateCssMessage }) => {
         if (message.data.type === 'stylebotCssUpdate') {
-          this.handleStylebotCssUpdate(message.data.css, message.data.selector);
+          this.handleStylebotCssUpdate(
+            message.data.css,
+            message.data.selector,
+            message.data.language
+          );
         }
       }
     );

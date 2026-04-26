@@ -36,6 +36,7 @@ import {
   GetImportCss as GetImportCssType,
   RunGoogleDriveSync as RunGoogleDriveSyncType,
   GenerateCssWithOpenAi as GenerateCssWithOpenAiType,
+  ExecuteUserJs as ExecuteUserJsType,
   GetCommandsResponse,
   GetAllOptionsResponse,
   GetAllStylesResponse,
@@ -57,8 +58,28 @@ import { get as getCommands, set as setCommands } from './commands';
 
 const OPEN_AI_API_URL = 'https://api.openai.com/v1/responses';
 const DEFAULT_OPEN_AI_MODEL = 'gpt-5.4-mini';
-const OPEN_AI_SYSTEM_PROMPT =
-  'You are Stylebot, an assistant that helps users change website styles. Return only JSON with this shape: {"message":"short helpful response","css":"complete updated Stylebot stylesheet"}. The css field is required and must not be empty. Do not use markdown. The context includes the user\'s current Stylebot stylesheet under `context.existingCss`. You MUST return the COMPLETE updated Stylebot stylesheet that will REPLACE the existing one: copy all of the existing rules verbatim, then add, modify, or remove only the rules needed to fulfill the user\'s request. Never return just a diff or just the new rules - always return the full final stylesheet the user should end up with. Use selectors that are likely to work on the current page. Preserve existing behavior unless asked to change it. If a previous attempt produced no visible change, the user will say "no change" or similar - in that case, try a different approach in the updated rules: use more specific selectors, add !important where needed, target different elements, or override inherited styles more aggressively. Never repeat CSS that already failed.';
+const OPEN_AI_SYSTEM_PROMPT = [
+  'You are Stylebot, an assistant that helps users change websites with CSS and JavaScript.',
+  'Return only JSON with this shape: {"message":"short helpful response","css":"complete updated Stylebot stylesheet","js":"complete updated Stylebot JavaScript"}. The css and js fields are required strings, but either may be empty when no code for that language is needed. Do not use markdown.',
+  'The context includes the user\'s current Stylebot stylesheet under `context.existingCss` and current Stylebot JavaScript under `context.existingJs`. You MUST return the COMPLETE updated CSS and JavaScript that will REPLACE the existing code: copy existing code verbatim for unchanged sections, then add, modify, or remove only the code needed to fulfill the user\'s request. Never return just a diff or just the new rules.',
+  'HOW STYLEBOT APPLIES CSS:',
+  '- The CSS you return is injected into the page as a single <style> element that Stylebot owns (one per matching URL pattern). It is re-injected every time the user edits the style, so your CSS must be a complete, valid stylesheet on its own.',
+  '- Stylebot parses the stylesheet with PostCSS and automatically appends `!important` to every declaration before injecting it. NEVER write `!important` yourself.',
+  '- Because rules are `!important`, they already beat most site styles. Prefer normal selectors; escalate specificity only when a site also uses `!important` or inline styles. Inline styles still win over Stylebot CSS - use JS to remove or override those.',
+  '- Stylebot CSS cannot pierce closed shadow DOM, cross-origin iframes, or <canvas>/<video> pixels. Use JS if you need to reach into those.',
+  '- The <style> element is re-applied on navigation and on tab updates, so transient DOM mutations by the site may temporarily "win" until the next application - JS can help enforce changes.',
+  'HOW STYLEBOT RUNS JAVASCRIPT:',
+  '- The JS you return is executed once per page load via chrome.scripting.executeScript in the MAIN world, so it runs with full access to `window`, `document`, and the page\'s own globals. It is NOT a module (no top-level `import`/`export`).',
+  '- JS runs AFTER the Stylebot <style> element is injected. The site may still mutate DOM afterwards, so prefer MutationObserver / setInterval-guarded hooks when you need changes to persist against dynamic content.',
+  '- JS may also be re-executed when the user updates the style (same tab, no reload). Make it idempotent: guard against duplicate event listeners, duplicated DOM insertions, and repeated wrapping. A common pattern is to tag created elements with a data attribute like `data-stylebot-added` and bail out if already present.',
+  '- Use JS to: remove stubborn inline styles, strip elements the site re-adds, react to route changes in SPAs, toggle classes, or set CSS custom properties on :root that your CSS consumes (e.g. set `--sb-accent` from JS, reference `var(--sb-accent)` in CSS).',
+  '- Do not navigate, reload, submit forms, send network requests to third parties, or log to analytics. Do not use `alert`, `confirm`, or `prompt`.',
+  'COORDINATION TIPS:',
+  '- When a change is purely visual, prefer CSS. When it requires removing/adding nodes, waiting for elements, or reacting to state, use JS - ideally toggling a CSS class that your CSS styles, so CSS stays the source of visual truth.',
+  '- If the site overrides your CSS with inline styles, write JS to clear those inline styles (e.g. `el.style.removeProperty(...)`) inside a MutationObserver instead of fighting with selector specificity.',
+  '- Prefer selectors that are likely to work on the current page. Preserve existing behavior unless asked to change it.',
+  'If a previous attempt produced no visible change, the user will say "no change" or similar - in that case, try a different approach in the updated CSS or JavaScript. Never repeat code that already failed.',
+].join(' ');
 
 type OpenAiResponse = {
   output_text?: string;
@@ -80,6 +101,7 @@ type OpenAiErrorResponse = {
 type StylebotAiResponsePayload = {
   message: string;
   css: string;
+  js: string;
 };
 
 export const DisableStyle = async (
@@ -95,7 +117,7 @@ export const EnableStyle = async (message: EnableStyleType): Promise<void> => {
 };
 
 export const SetStyle = (message: SetStyleType): Promise<void> =>
-  set(message.url, message.css, message.readability);
+  set(message.url, message.css, message.js || '', message.readability);
 
 export const GetAllStyles = async (
   sendResponse: (response: GetAllStylesResponse) => void
@@ -167,8 +189,12 @@ export const OpenDonatePage = (): void => {
   chrome.tabs.create({ url: 'https://ko-fi.com/stylebot' });
 };
 
-export const SetOption = (message: SetOptionType): void => {
-  setOption(message.option.name, message.option.value);
+export const SetOption = async (
+  message: SetOptionType,
+  sendResponse?: () => void
+): Promise<void> => {
+  await setOption(message.option.name, message.option.value);
+  if (sendResponse) sendResponse();
 };
 
 export const GetCommands = async (
@@ -212,8 +238,12 @@ export const RunGoogleDriveSync = async (
   _message: RunGoogleDriveSyncType,
   sendResponse: (response: RunGoogleDriveSyncResponse) => void
 ): Promise<void> => {
-  await runGoogleDriveSync();
-  sendResponse();
+  try {
+    await runGoogleDriveSync();
+    sendResponse();
+  } catch (e) {
+    sendResponse({ error: e instanceof Error ? e.message : String(e) });
+  }
 };
 
 const getTextFromOpenAiResponse = (response: unknown): string => {
@@ -249,6 +279,7 @@ const getResponsePayload = (response: unknown): StylebotAiResponsePayload => {
     return {
       message: payload.message || '',
       css: payload.css || '',
+      js: payload.js || '',
     };
   } catch (e) {
     const stripped = text
@@ -262,6 +293,7 @@ const getResponsePayload = (response: unknown): StylebotAiResponsePayload => {
     return {
       message: looksLikeCss ? '' : stripped,
       css: looksLikeCss ? stripped : '',
+      js: '',
     };
   }
 };
@@ -276,7 +308,12 @@ export const GenerateCssWithOpenAi = async (
     typeof openAiModel === 'string' ? openAiModel : DEFAULT_OPEN_AI_MODEL;
 
   if (!apiKey || typeof apiKey !== 'string') {
-    sendResponse({ css: '', message: '', error: 'Missing OpenAI API key.' });
+    sendResponse({
+      css: '',
+      js: '',
+      message: '',
+      error: 'Missing OpenAI API key.',
+    });
     return;
   }
 
@@ -324,6 +361,7 @@ export const GenerateCssWithOpenAi = async (
         `OpenAI request failed (${response.status}).`;
       sendResponse({
         css: '',
+        js: '',
         message: `[OpenAI raw response ${response.status}]\n${rawBody}`,
         error,
       });
@@ -336,9 +374,10 @@ export const GenerateCssWithOpenAi = async (
       postcss.parse(payload.css);
     }
 
-    if (!payload.css && !payload.message) {
+    if (!payload.css && !payload.js && !payload.message) {
       sendResponse({
         css: '',
+        js: '',
         message: `[OpenAI raw response]\n${rawBody}`,
         error: 'OpenAI returned an empty response.',
       });
@@ -349,13 +388,47 @@ export const GenerateCssWithOpenAi = async (
       ...payload,
       message:
         payload.message ||
-        (payload.css ? 'I generated CSS for that change.' : ''),
+        (payload.css || payload.js ? 'I generated code for that change.' : ''),
     });
   } catch (e) {
     sendResponse({
       css: '',
+      js: '',
       message: '',
       error: e instanceof Error ? e.message : 'Unknown OpenAI error.',
     });
+  }
+};
+
+const runUserJsInPage = (code: string): void => {
+  try {
+    (0, eval)(code);
+  } catch (e) {
+    console.error(
+      `[${new Date().toISOString()}] Stylebot user JS error:`,
+      e
+    );
+  }
+};
+
+export const ExecuteUserJs = async (
+  message: ExecuteUserJsType,
+  sender: chrome.runtime.MessageSender
+): Promise<void> => {
+  const tabId = message.tabId ?? sender.tab?.id;
+  if (!tabId || !message.js) return;
+
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId, allFrames: !!message.allFrames },
+      world: 'MAIN',
+      func: runUserJsInPage,
+      args: [message.js],
+    });
+  } catch (e) {
+    console.error(
+      `[${new Date().toISOString()}] Stylebot failed to execute user JS:`,
+      e
+    );
   }
 };

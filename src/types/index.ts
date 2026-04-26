@@ -28,6 +28,7 @@ export type StylebotOptions = {
   colorPalette: StylebotColorPalette;
   openAiApiKey: string;
   openAiModel: string;
+  googleDriveClientId: string;
 };
 
 export type StylebotAiStyleContext = {
@@ -38,6 +39,7 @@ export type StylebotAiStyleContext = {
     stylebotUrl: string;
   };
   existingCss: string;
+  existingJs: string;
   activeElement?: {
     selector: string;
     html: string;
@@ -68,12 +70,14 @@ export type StylebotAiChatHistoryEntry = {
   role: 'user' | 'assistant';
   content: string;
   css?: string;
+  js?: string;
   createdAt: Timestamp;
 };
 
 export type Style = {
   url: string;
   css: string;
+  js?: string;
   enabled: boolean;
   readability: boolean;
   modifiedTime: Timestamp;

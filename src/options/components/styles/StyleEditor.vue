@@ -12,16 +12,47 @@
         />
       </div>
 
-      <div class="style-editor-code mx-3">
-        <code-editor :css="css" @update="css = $event" />
+      <div class="style-editor-panes mx-3">
+        <div class="style-editor-pane style-editor-pane--css">
+          <code-editor
+            :css="css"
+            language="css"
+            @update="css = $event"
+          />
+        </div>
+
+        <div
+          class="style-editor-pane style-editor-pane--js"
+          :class="{ 'style-editor-pane--collapsed': !jsExpanded }"
+        >
+          <button
+            type="button"
+            class="style-editor-js-tab"
+            :aria-expanded="jsExpanded ? 'true' : 'false'"
+            @click="jsExpanded = !jsExpanded"
+          >
+            <span>JavaScript</span>
+            <span class="style-editor-js-tab-caret">
+              {{ jsExpanded ? '▾' : '▴' }}
+            </span>
+          </button>
+
+          <div v-show="jsExpanded" class="style-editor-js-body">
+            <code-editor
+              :css="js"
+              language="javascript"
+              @update="js = $event"
+            />
+          </div>
+        </div>
       </div>
 
       <div class="style-editor-footer py-5 px-3">
         <app-button
           class="ml-3"
           variant="primary"
-          :disabled="!url || !css"
-          @click="$emit('save', { initialUrl, url, css })"
+          :disabled="!url || (!css && !js)"
+          @click="$emit('save', { initialUrl, url, css, js })"
         >
           {{ t('save') }}
         </app-button>
@@ -58,15 +89,25 @@ export default Vue.extend({
       required: false,
       default: '',
     },
+
+    initialJs: {
+      type: String,
+      required: false,
+      default: '',
+    },
   },
 
   data(): {
     url: string;
     css: string;
+    js: string;
+    jsExpanded: boolean;
   } {
     return {
       url: this.initialUrl,
       css: this.initialCss,
+      js: this.initialJs,
+      jsExpanded: !!this.initialJs,
     };
   },
 });
@@ -97,10 +138,60 @@ export default Vue.extend({
   left: 10%;
 }
 
-.style-editor-code {
+.style-editor-panes {
+  display: flex;
+  flex-direction: column;
   height: 75%;
   border: 1px solid #eee;
   border-right-width: 2px;
+}
+
+.style-editor-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.style-editor-pane--css {
+  flex: 1 1 auto;
+}
+
+.style-editor-pane--js {
+  flex: 0 0 auto;
+  border-top: 1px solid #e5e7eb;
+}
+
+.style-editor-pane--js:not(.style-editor-pane--collapsed) {
+  flex: 1 1 40%;
+}
+
+.style-editor-js-tab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 6px 12px;
+  background: #f9fafb;
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
+  color: #111827;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.style-editor-js-tab:hover {
+  background: #f3f4f6;
+}
+
+.style-editor-js-tab-caret {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.style-editor-js-body {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .style-editor-footer {

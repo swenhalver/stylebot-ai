@@ -1,0 +1,18 @@
+---
+description: Interpret "push" as commit then push
+alwaysApply: true
+---
+
+# Push Means Commit And Push
+
+When the user says "push", interpret that as:
+
+1. Create a commit for the relevant changes with an appropriate commit message.
+2. Push that commit to the tracked remote branch.
+
+Default behavior for "push":
+- Stage relevant files.
+- Commit with a concise message that matches repo conventions.
+- Push to remote.
+
+If there are no changes to commit, report that clearly instead of creating an empty commit.

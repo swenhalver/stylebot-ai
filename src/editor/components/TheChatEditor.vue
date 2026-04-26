@@ -237,6 +237,29 @@
               </div>
               <pre class="sb-msg__code-pre"><code>{{ entry.css }}</code></pre>
             </div>
+
+            <div v-if="entry.js" class="sb-msg__code">
+              <div class="sb-msg__code-head">
+                <span class="sb-msg__code-lang">js</span>
+                <div class="sb-msg__code-actions">
+                  <button
+                    type="button"
+                    class="sb-msg__code-btn"
+                    @click="copyCode(entry.js)"
+                  >
+                    {{ t('copy') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="sb-msg__code-btn sb-msg__code-btn--primary"
+                    @click="applyJsFromEntry(entry.js)"
+                  >
+                    {{ t('apply_generated_js') }}
+                  </button>
+                </div>
+              </div>
+              <pre class="sb-msg__code-pre"><code>{{ entry.js }}</code></pre>
+            </div>
           </div>
         </article>
 
@@ -311,6 +334,10 @@ import Vue from 'vue';
 
 import { t } from '@stylebot/i18n';
 import { StylebotAiChatHistoryEntry } from '@stylebot/types';
+import {
+  DEFAULT_OPEN_AI_MODEL,
+  OPEN_AI_MODEL_OPTIONS,
+} from '@stylebot/settings';
 
 import { generateCssWithOpenAi, openOptionsPage } from '../utils/chrome';
 import { collectStyleContext } from '../utils/style-context';
@@ -318,22 +345,6 @@ import { collectStyleContext } from '../utils/style-context';
 const CHAT_HISTORY_STORAGE_KEY = 'ai-chat-history';
 const CHAT_DRAFT_STORAGE_KEY = 'ai-chat-draft';
 const MAX_CHAT_HISTORY_ENTRIES = 30;
-const DEFAULT_OPEN_AI_MODEL = 'gpt-5.4-mini';
-const OPEN_AI_MODEL_OPTIONS = [
-  { label: 'GPT-5.5', value: 'gpt-5.5' },
-  { label: 'GPT-5.5 Pro', value: 'gpt-5.5-pro' },
-  { label: 'GPT-5.4', value: 'gpt-5.4' },
-  { label: 'GPT-5.4 Pro', value: 'gpt-5.4-pro' },
-  { label: 'GPT-5.4 mini', value: DEFAULT_OPEN_AI_MODEL },
-  { label: 'GPT-5.4 nano', value: 'gpt-5.4-nano' },
-  { label: 'GPT-5', value: 'gpt-5' },
-  { label: 'GPT-5 mini', value: 'gpt-5-mini' },
-  { label: 'GPT-5 nano', value: 'gpt-5-nano' },
-  { label: 'GPT-4o mini', value: 'gpt-4o-mini' },
-  { label: 'GPT-4o', value: 'gpt-4o' },
-  { label: 'GPT-4.1 mini', value: 'gpt-4.1-mini' },
-  { label: 'GPT-4.1', value: 'gpt-4.1' },
-];
 
 export default Vue.extend({
   name: 'TheChatEditor',
@@ -380,6 +391,10 @@ export default Vue.extend({
 
     css(): string {
       return this.$store.state.css;
+    },
+
+    js(): string {
+      return this.$store.state.js;
     },
 
     activeSelector(): string {
@@ -541,16 +556,25 @@ export default Vue.extend({
       if (el) el.scrollTop = el.scrollHeight;
     },
 
-    copyCss(css: string): void {
+    copyCode(code: string): void {
       try {
-        navigator.clipboard.writeText(css);
+        navigator.clipboard.writeText(code);
       } catch (e) {
         // clipboard may be unavailable; ignore
       }
     },
 
+    copyCss(css: string): void {
+      this.copyCode(css);
+    },
+
     applyCssFromEntry(css: string): void {
       this.$store.dispatch('applyCss', { css: css.trim() });
+      this.status = t('chat_status_applied');
+    },
+
+    applyJsFromEntry(js: string): void {
+      this.$store.dispatch('applyJs', { js: js.trim() });
       this.status = t('chat_status_applied');
     },
 
@@ -576,6 +600,7 @@ export default Vue.extend({
 
         const styleContext = collectStyleContext({
           existingCss: this.css,
+          existingJs: this.js,
           stylebotUrl: this.stylebotUrl,
           activeSelector: this.activeSelector,
         });
@@ -590,15 +615,16 @@ export default Vue.extend({
 
         const assistantContent =
           response.message ||
-          (response.css
-            ? t('chat_generated_css_message')
+          (response.css || response.js
+            ? t('chat_generated_code_message')
             : response.error || '');
 
-        if (assistantContent || response.css) {
+        if (assistantContent || response.css || response.js) {
           await this.appendHistoryEntry({
             role: 'assistant',
             content: assistantContent,
             css: response.css,
+            js: response.js,
           });
         }
 
@@ -639,12 +665,13 @@ export default Vue.extend({
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 10px 12px;
   border-bottom: 1px solid #e5e7eb;
   background: #ffffff;
   position: sticky;
   top: 0;
   z-index: 2;
+  min-width: 0;
 }
 
 .sb-chat__brand {
@@ -654,6 +681,15 @@ export default Vue.extend({
   font-weight: 600;
   font-size: 13px;
   color: #111827;
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+}
+
+.sb-chat__brand-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sb-chat__brand-dot {
@@ -668,6 +704,8 @@ export default Vue.extend({
   display: flex;
   align-items: center;
   gap: 6px;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .sb-chat__model-select {
@@ -677,7 +715,10 @@ export default Vue.extend({
   border-radius: 6px;
   background: #f9fafb;
   color: #111827;
-  max-width: 150px;
+  max-width: 140px;
+  min-width: 0;
+  flex: 0 1 auto;
+  text-overflow: ellipsis;
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
@@ -693,6 +734,7 @@ export default Vue.extend({
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
   width: 28px;
   height: 28px;
   padding: 0;

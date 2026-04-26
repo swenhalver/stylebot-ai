@@ -1,8 +1,26 @@
 // Code from https://github.com/mdn/webextensions-examples/tree/master/google-userinfo
 export type AccessToken = string;
 
-const CLIENT_ID =
-  '662998053209-s49tq55ic3td87m08gi8vpjqm5t7r9st.apps.googleusercontent.com';
+type StoredOptions = {
+  googleDriveClientId?: string;
+};
+
+const getGoogleDriveClientId = (): Promise<string> =>
+  new Promise((resolve, reject) => {
+    chrome.storage.local.get('options', items => {
+      const options = (items['options'] || {}) as StoredOptions;
+      const clientId = (options.googleDriveClientId || '').trim();
+
+      if (!clientId) {
+        reject(
+          'Missing Google Drive OAuth client ID. Add one in Stylebot Sync options.'
+        );
+        return;
+      }
+
+      resolve(clientId);
+    });
+  });
 
 const extractAccessToken = (redirectUri: string) => {
   const m = redirectUri.match(/[#?](.*)/);
@@ -26,7 +44,10 @@ const extractAccessToken = (redirectUri: string) => {
  * Note that the Google page talks about an "audience" property, but in fact
  * it seems to be "aud".
  */
-const validate = async (redirectURL?: string): Promise<AccessToken> => {
+const validate = async (
+  clientId: string,
+  redirectURL?: string
+): Promise<AccessToken> => {
   if (!redirectURL) {
     throw 'Authorization failure';
   }
@@ -42,35 +63,30 @@ const validate = async (redirectURL?: string): Promise<AccessToken> => {
     method: 'GET',
   });
 
-  const checkResponse = (response: Response) => {
-    return new Promise<AccessToken>((resolve, reject) => {
-      if (response.status != 200) {
-        reject('Token validation error');
-        return;
-      }
-
-      response.json().then((json: { aud: string }) => {
-        if (json.aud && json.aud === CLIENT_ID) {
-          resolve(accessToken);
-        } else {
-          reject('Token validation error');
-        }
-      });
-    });
-  };
-
   const response = await fetch(validationRequest);
-  return checkResponse(response);
+  if (response.status != 200) {
+    throw 'Token validation error';
+  }
+
+  const json = (await response.json()) as { aud: string };
+  if (json.aud && json.aud === clientId) {
+    return accessToken;
+  }
+
+  throw 'Token validation error';
 };
 
-const authorize = (): Promise<string | undefined> => {
+const authorize = (clientId: string): Promise<string | undefined> => {
   return new Promise(resolve => {
-    console.debug('Extension redirectURL:', chrome.identity.getRedirectURL());
     const redirectURL = chrome.identity.getRedirectURL();
+    console.debug(
+      `[${new Date().toISOString()}] Extension redirectURL:`,
+      redirectURL
+    );
     const scopes = ['https://www.googleapis.com/auth/drive.file'];
 
     let authURL = 'https://accounts.google.com/o/oauth2/auth';
-    authURL += `?client_id=${CLIENT_ID}`;
+    authURL += `?client_id=${encodeURIComponent(clientId)}`;
     authURL += `&response_type=token`;
     authURL += `&redirect_uri=${encodeURIComponent(redirectURL)}`;
     authURL += `&scope=${encodeURIComponent(scopes.join(' '))}`;
@@ -86,6 +102,7 @@ const authorize = (): Promise<string | undefined> => {
 };
 
 export default async (): Promise<AccessToken> => {
-  const redirectURL = await authorize();
-  return validate(redirectURL);
+  const clientId = await getGoogleDriveClientId();
+  const redirectURL = await authorize(clientId);
+  return validate(clientId, redirectURL);
 };

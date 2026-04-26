@@ -154,14 +154,6 @@ export default Vue.extend({
         this.toggleVisibilityOfActiveSelector();
       }
 
-      // Switch to basic editor
-      if (event.key === this.editorCommands.basic) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        this.$store.dispatch('setMode', 'basic');
-      }
-
       // Switch to code editor
       if (event.key === this.editorCommands.code) {
         event.preventDefault();

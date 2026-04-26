@@ -102,8 +102,8 @@ export const getStylesForPage = (
         ? appendImportantToDeclarations(allStyles[url].css)
         : allStyles[url].css;
 
-      const { enabled, readability, modifiedTime } = allStyles[url];
-      const style = { url, css, enabled, readability, modifiedTime };
+      const { enabled, js, readability, modifiedTime } = allStyles[url];
+      const style = { url, css, js, enabled, readability, modifiedTime };
 
       if (url !== '*') {
         if (!defaultStyle || url.length > defaultStyle.url.length) {
@@ -111,7 +111,7 @@ export const getStylesForPage = (
         }
       }
 
-      if (style.css) {
+      if (style.css || style.js) {
         styles.push(style);
       }
     }
@@ -133,15 +133,17 @@ export const setAll = async (styles: StyleMap): Promise<void> => {
 export const set = async (
   url: string,
   css: string,
+  js: string,
   readability: boolean
 ): Promise<void> => {
   const styles = await getAll();
 
-  if (!css) {
+  if (!css && !js) {
     delete styles[url];
   } else {
     styles[url] = {
       css,
+      js,
       readability,
       enabled: true,
       modifiedTime: getCurrentTimestamp(),
@@ -184,6 +186,7 @@ export const setReadability = async (
   } else {
     styles[url] = {
       css: '',
+      js: '',
       enabled: true,
       readability: value,
       modifiedTime: getCurrentTimestamp(),

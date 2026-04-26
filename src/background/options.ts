@@ -33,5 +33,7 @@ export const set = async (
     [name]: value,
   };
 
-  chrome.storage.local.set({ options });
+  return new Promise(resolve => {
+    chrome.storage.local.set({ options }, () => resolve());
+  });
 };

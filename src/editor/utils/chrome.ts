@@ -92,12 +92,14 @@ export const openDonatePage = (): void => {
 export const setStyle = (
   url: string,
   css: string,
+  js: string,
   readability: boolean
 ): void => {
   const message: SetStyle = {
     name: 'SetStyle',
     url,
     css,
+    js,
     readability,
   };
 

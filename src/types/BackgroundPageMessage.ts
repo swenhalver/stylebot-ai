@@ -11,6 +11,7 @@ export type SetStyle = {
   name: 'SetStyle';
   url: string;
   css: string;
+  js?: string;
   readability: boolean;
 };
 
@@ -117,6 +118,13 @@ export type GenerateCssWithOpenAi = {
   chatHistory: Array<StylebotAiChatHistoryEntry>;
 };
 
+export type ExecuteUserJs = {
+  name: 'ExecuteUserJs';
+  js: string;
+  allFrames?: boolean;
+  tabId?: number;
+};
+
 type BackgroundPageMessage =
   | SetStyle
   | EnableStyle
@@ -138,6 +146,7 @@ type BackgroundPageMessage =
   | SetReadabilitySettings
   | GetImportCss
   | RunGoogleDriveSync
-  | GenerateCssWithOpenAi;
+  | GenerateCssWithOpenAi
+  | ExecuteUserJs;
 
 export default BackgroundPageMessage;

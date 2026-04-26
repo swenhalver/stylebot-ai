@@ -9,6 +9,7 @@ import {
 
 const mockState: State = {
   css: '',
+  js: '',
   enabled: true,
   url: document.domain,
 

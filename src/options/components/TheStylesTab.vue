@@ -51,6 +51,7 @@
           v-for="style in styles"
           :key="style.url"
           :css="style.css"
+          :js="style.js || ''"
           :url="style.url"
           :modified-time="style.modifiedTime"
           :initial-enabled="style.enabled"
@@ -104,6 +105,7 @@ export default Vue.extend({
           styles.push({
             url,
             css: stylesObj[url].css,
+            js: stylesObj[url].js || '',
             enabled: stylesObj[url].enabled,
             readability: stylesObj[url].readability,
             modifiedTime: stylesObj[url].modifiedTime,
@@ -152,12 +154,14 @@ export default Vue.extend({
       initialUrl,
       url,
       css,
+      js,
     }: {
       initialUrl: string;
       url: string;
       css: string;
+      js: string;
     }): void {
-      this.$store.dispatch('saveStyle', { initialUrl, url, css });
+      this.$store.dispatch('saveStyle', { initialUrl, url, css, js });
     },
   },
 });

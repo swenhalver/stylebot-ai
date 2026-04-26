@@ -4,6 +4,7 @@
       v-if="edit"
       :initial-url="url"
       :initial-css="css"
+      :initial-js="js"
       @save="
         // todo: handle syntax errors
         $emit('save', $event);
@@ -62,6 +63,11 @@ export default Vue.extend({
     css: {
       type: String,
       required: true,
+    },
+    js: {
+      type: String,
+      required: false,
+      default: '',
     },
     modifiedTime: {
       type: String,

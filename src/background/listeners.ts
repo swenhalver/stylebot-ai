@@ -22,6 +22,7 @@ import {
   GetImportCss,
   RunGoogleDriveSync,
   GenerateCssWithOpenAi,
+  ExecuteUserJs,
 } from './messages';
 
 import { get as getOption } from './options';
@@ -98,7 +99,7 @@ chrome.runtime.onMessage.addListener(
         GetOption(message, sendResponse);
         break;
       case 'SetOption':
-        SetOption(message);
+        SetOption(message, sendResponse);
         break;
       case 'GetAllOptions':
         GetAllOptions(sendResponse);
@@ -156,6 +157,10 @@ chrome.runtime.onMessage.addListener(
 
       case 'GenerateCssWithOpenAi':
         GenerateCssWithOpenAi(message, sendResponse);
+        break;
+
+      case 'ExecuteUserJs':
+        ExecuteUserJs(message, sender);
         break;
     }
 

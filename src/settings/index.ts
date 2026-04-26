@@ -6,7 +6,7 @@ import {
 } from '@stylebot/types';
 
 export const defaultOptions: StylebotOptions = {
-  mode: 'basic',
+  mode: 'code',
   contextMenu: true,
   fonts: [
     'Helvetica',
@@ -32,6 +32,7 @@ export const defaultOptions: StylebotOptions = {
   colorPalette: 'basic',
   openAiApiKey: '',
   openAiModel: 'gpt-5.4-mini',
+  googleDriveClientId: '',
 };
 
 export const defaultCommands: StylebotCommands = {
@@ -55,6 +56,24 @@ export const defaultEditorCommands: StylebotEditorCommands = {
   pageLayout: 'p',
   close: 'Escape',
 };
+
+export const DEFAULT_OPEN_AI_MODEL = 'gpt-5.4-mini';
+
+export const OPEN_AI_MODEL_OPTIONS: Array<{ label: string; value: string }> = [
+  { label: 'GPT-5.5', value: 'gpt-5.5' },
+  { label: 'GPT-5.5 Pro', value: 'gpt-5.5-pro' },
+  { label: 'GPT-5.4', value: 'gpt-5.4' },
+  { label: 'GPT-5.4 Pro', value: 'gpt-5.4-pro' },
+  { label: 'GPT-5.4 mini', value: DEFAULT_OPEN_AI_MODEL },
+  { label: 'GPT-5.4 nano', value: 'gpt-5.4-nano' },
+  { label: 'GPT-5', value: 'gpt-5' },
+  { label: 'GPT-5 mini', value: 'gpt-5-mini' },
+  { label: 'GPT-5 nano', value: 'gpt-5-nano' },
+  { label: 'GPT-4o mini', value: 'gpt-4o-mini' },
+  { label: 'GPT-4o', value: 'gpt-4o' },
+  { label: 'GPT-4.1 mini', value: 'gpt-4.1-mini' },
+  { label: 'GPT-4.1', value: 'gpt-4.1' },
+];
 
 export const defaultReadabilitySettings: ReadabilitySettings = {
   size: 16,

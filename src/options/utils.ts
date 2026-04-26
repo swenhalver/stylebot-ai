@@ -12,6 +12,7 @@ import {
   StylebotCommands,
   StyleMap,
   RunGoogleDriveSync,
+  RunGoogleDriveSyncResponse,
 } from '@stylebot/types';
 
 export const getAllStyles = async (): Promise<GetAllStylesResponse> => {
@@ -50,7 +51,7 @@ export const setAllStyles = (styles: StyleMap): void => {
 export const setOption = (
   name: keyof StylebotOptions,
   value: StylebotOptions[keyof StylebotOptions]
-): void => {
+): Promise<void> => {
   const message: SetOption = {
     name: 'SetOption',
     option: {
@@ -59,7 +60,9 @@ export const setOption = (
     },
   };
 
-  chrome.runtime.sendMessage(message);
+  return new Promise(resolve => {
+    chrome.runtime.sendMessage(message, () => resolve());
+  });
 };
 
 export const getCommands = async (): Promise<GetCommandsResponse> => {
@@ -88,10 +91,18 @@ export const runGoogleDriveSync = async (): Promise<void> => {
     name: 'RunGoogleDriveSync',
   };
 
-  return new Promise(resolve => {
-    chrome.runtime.sendMessage(message, () => {
-      resolve();
-    });
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(
+      message,
+      (response: RunGoogleDriveSyncResponse) => {
+        if (response && 'error' in response) {
+          reject(response.error);
+          return;
+        }
+
+        resolve();
+      }
+    );
   });
 };
 

@@ -12,6 +12,7 @@ export type GetOptionResponse = StylebotOptions[keyof StylebotOptions];
 export type GetAllStylesResponse = {
   [url: string]: {
     css: string;
+    js?: string;
     enabled: boolean;
     readability: boolean;
     modifiedTime: Timestamp;
@@ -27,9 +28,14 @@ export type GetCommandsResponse = StylebotCommands;
 export type GetReadabilitySettingsResponse = ReadabilitySettings;
 
 export type GetImportCssResponse = string;
-export type RunGoogleDriveSyncResponse = void;
+export type RunGoogleDriveSyncResponse =
+  | void
+  | {
+      error: string;
+    };
 export type GenerateCssWithOpenAiResponse = {
   css: string;
+  js: string;
   message: string;
   error?: string;
 };

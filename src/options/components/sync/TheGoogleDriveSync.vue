@@ -1,5 +1,39 @@
 <template>
   <div>
+    <b-row no-gutters class="description mb-2">
+      {{ t('google_drive_client_id_description') }}
+    </b-row>
+
+    <label class="client-id-label" for="stylebot-options-google-client-id">
+      {{ t('google_drive_client_id') }}
+    </label>
+
+    <div class="client-id-row mb-3">
+      <b-form-input
+        id="stylebot-options-google-client-id"
+        v-model="googleDriveClientId"
+        type="password"
+        autocomplete="off"
+        placeholder="...apps.googleusercontent.com"
+      />
+
+      <app-button
+        class="ml-2"
+        :disabled="syncInProgress"
+        @click="saveGoogleDriveClientId"
+      >
+        {{ t('save_google_drive_client_id') }}
+      </app-button>
+    </div>
+
+    <b-row v-if="clientIdSaved" no-gutters class="saved-message mb-3">
+      {{ t('google_drive_client_id_saved') }}
+    </b-row>
+
+    <b-alert v-model="showSyncError" variant="danger" dismissible>
+      {{ syncError }}
+    </b-alert>
+
     <b-row no-gutters class="description mb-1">
       <div v-if="googleDriveSyncLastModifiedTime && !syncInProgress">
         {{
@@ -87,9 +121,17 @@ export default Vue.extend({
 
   data(): {
     syncInProgress: boolean;
+    googleDriveClientId: string;
+    clientIdSaved: boolean;
+    showSyncError: boolean;
+    syncError: string;
   } {
     return {
       syncInProgress: false,
+      googleDriveClientId: '',
+      clientIdSaved: false,
+      showSyncError: false,
+      syncError: '',
     };
   },
 
@@ -132,11 +174,31 @@ export default Vue.extend({
     },
   },
 
+  created(): void {
+    this.googleDriveClientId = this.$store.state.options.googleDriveClientId;
+  },
+
   methods: {
+    async saveGoogleDriveClientId(): Promise<void> {
+      await this.$store.dispatch('setOption', {
+        name: 'googleDriveClientId',
+        value: this.googleDriveClientId.trim(),
+      });
+      this.clientIdSaved = true;
+    },
+
     async syncWithGoogleDrive() {
       this.syncInProgress = true;
-      await this.$store.dispatch('syncWithGoogleDrive');
-      this.syncInProgress = false;
+      this.showSyncError = false;
+
+      try {
+        await this.$store.dispatch('syncWithGoogleDrive');
+      } catch (e) {
+        this.syncError = e instanceof Error ? e.message : String(e);
+        this.showSyncError = true;
+      } finally {
+        this.syncInProgress = false;
+      }
     },
   },
 });
@@ -146,5 +208,21 @@ export default Vue.extend({
 .description {
   color: #555;
   font-size: 15px;
+}
+
+.client-id-label {
+  color: #555;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.client-id-row {
+  display: flex;
+  align-items: center;
+}
+
+.saved-message {
+  color: #16804f;
+  font-size: 13px;
 }
 </style>

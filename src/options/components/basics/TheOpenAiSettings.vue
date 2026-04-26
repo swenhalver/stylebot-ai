@@ -27,6 +27,26 @@
     <div v-if="saved" class="saved-message mt-2">
       {{ t('api_key_saved') }}
     </div>
+
+    <label class="api-key-label mt-3 d-block" for="stylebot-options-open-ai-model">
+      {{ t('open_ai_model') }}
+    </label>
+
+    <div class="description mb-2">
+      {{ t('open_ai_model_description') }}
+    </div>
+
+    <b-form-select
+      id="stylebot-options-open-ai-model"
+      v-model="model"
+      class="model-select"
+      :options="modelOptions"
+      @change="saveModel"
+    />
+
+    <div v-if="modelSaved" class="saved-message mt-2">
+      {{ t('default_model_saved') }}
+    </div>
   </div>
 </template>
 
@@ -34,6 +54,10 @@
 import Vue from 'vue';
 
 import AppButton from '../AppButton.vue';
+import {
+  DEFAULT_OPEN_AI_MODEL,
+  OPEN_AI_MODEL_OPTIONS,
+} from '@stylebot/settings';
 
 export default Vue.extend({
   name: 'TheOpenAiSettings',
@@ -44,16 +68,27 @@ export default Vue.extend({
 
   data(): {
     apiKey: string;
+    model: string;
     saved: boolean;
+    modelSaved: boolean;
+    modelOptions: Array<{ value: string; text: string }>;
   } {
     return {
       apiKey: '',
+      model: DEFAULT_OPEN_AI_MODEL,
       saved: false,
+      modelSaved: false,
+      modelOptions: OPEN_AI_MODEL_OPTIONS.map(m => ({
+        value: m.value,
+        text: m.label,
+      })),
     };
   },
 
   created(): void {
     this.apiKey = this.$store.state.options.openAiApiKey;
+    this.model =
+      this.$store.state.options.openAiModel || DEFAULT_OPEN_AI_MODEL;
   },
 
   methods: {
@@ -63,6 +98,14 @@ export default Vue.extend({
         value: this.apiKey.trim(),
       });
       this.saved = true;
+    },
+
+    saveModel(): void {
+      this.$store.dispatch('setOption', {
+        name: 'openAiModel',
+        value: this.model,
+      });
+      this.modelSaved = true;
     },
   },
 });
@@ -83,6 +126,10 @@ export default Vue.extend({
 .open-ai-key-row {
   display: flex;
   align-items: center;
+}
+
+.model-select {
+  max-width: 300px;
 }
 
 .saved-message {

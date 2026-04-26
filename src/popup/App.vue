@@ -76,7 +76,7 @@ export default Vue.extend({
       });
 
       getStyles(this.tab, ({ styles, defaultStyle }) => {
-        this.styles = styles.filter(style => style.css);
+        this.styles = styles.filter(style => style.css || style.js);
         this.readability = !!defaultStyle && defaultStyle.readability;
       });
 

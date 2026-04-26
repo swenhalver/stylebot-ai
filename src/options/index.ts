@@ -9,6 +9,7 @@ import {
   LayoutPlugin,
   DropdownPlugin,
   FormInputPlugin,
+  FormSelectPlugin,
   ButtonPlugin,
   ListGroupPlugin,
   FormCheckboxPlugin,
@@ -22,6 +23,7 @@ Vue.use(IconsPlugin);
 Vue.use(LayoutPlugin);
 Vue.use(DropdownPlugin);
 Vue.use(FormInputPlugin);
+Vue.use(FormSelectPlugin);
 Vue.use(ButtonPlugin);
 Vue.use(FormCheckboxPlugin);
 Vue.use(ListGroupPlugin);

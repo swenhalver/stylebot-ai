@@ -29,6 +29,10 @@ export default {
     state.css = css;
   },
 
+  setJs(state: State, js: string): void {
+    state.js = js;
+  },
+
   setActiveSelector(state: State, selector: string): void {
     state.activeSelector = selector;
   },

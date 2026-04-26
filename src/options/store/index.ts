@@ -79,7 +79,8 @@ export default new Vuex.Store<State>({
         initialUrl,
         url,
         css,
-      }: { initialUrl?: string; url: string; css: string }
+        js = '',
+      }: { initialUrl?: string; url: string; css: string; js?: string }
     ) {
       try {
         // validate by parsing
@@ -88,6 +89,7 @@ export default new Vuex.Store<State>({
 
         styles[url] = {
           css,
+          js,
           readability: styles[url] ? styles[url].readability : false,
           enabled: styles[url] ? styles[url].enabled : true,
           modifiedTime: getCurrentTimestamp(),
@@ -149,7 +151,7 @@ export default new Vuex.Store<State>({
       setAllStyles(state.styles);
     },
 
-    setOption(
+    async setOption(
       { state },
       {
         name,
@@ -161,7 +163,7 @@ export default new Vuex.Store<State>({
     ) {
       /* @ts-ignore */
       state.options[name] = value;
-      setOption(name, value);
+      await setOption(name, value);
     },
 
     setCommands({ state }, commands: StylebotCommands) {
